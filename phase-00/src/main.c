@@ -12,7 +12,8 @@ typedef struct {
 typedef struct {
     double mass;
     vector2 position;
-    double velocity;
+    vector2 velocity;
+    vector2 forces[2];
     int physics_on;
 } object;
 
@@ -47,7 +48,9 @@ int main(void) {
 
     initialize_ball_physics(balls, n_balls);
 
-    double acceleration = -9.81;
+    
+
+    double acceleration_g = -9.81;
     double dt = 0.1;
     double time = 0.0;
     double time_start = 0.0;
@@ -64,9 +67,14 @@ int main(void) {
                 continue;
             };
 
-            printf("Ball: %d | t=%6.2f | y=%8.3f | v=%8.3f m/s\n", i+1, time, ball->position.y, ball->velocity);
-            ball->velocity += acceleration * dt;
-            ball->position.y += ball->velocity * dt;
+            printf("Ball: %d | t=%6.2f | y=%8.3f | v=%8.3f m/s\n", i+1, time, ball->position.y, ball->velocity.y);
+
+            double force_g = acceleration_g * ball->mass;
+
+            double a = force_g / ball->mass;
+
+            ball->velocity.y += a * dt;
+            ball->position.y += ball->velocity.y * dt;
 
             if (ball->position.y <= 0){
                 if (!fastest_ball_set) {

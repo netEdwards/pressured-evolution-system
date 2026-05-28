@@ -75,3 +75,8 @@ For this implementation I am writing/documenting before I begin coding. The goal
 A more refined definition of the goal here is, "Can each object compute its own acceleration from forced acting on it , rather than sharing one hardcoded acceleration value?". 
 
 The implementation will stay non-abstract with minor to small abstractions for readability in `main.c`. Readability is still a pressure point in programming and development - while at this stage its very minor. 
+
+#### Issues Encountered
+
+The first one was after adding in just the math to calculate acceleration based on a force, by just changing how the objects acceleration is derived (from force), it seems that the velocity has been disrupted. Which is odd. I also changed the velocity from a double to vector2 type we defined in implementation 1. I will look into this. 
+- Updated, I figured it out. It was just because I did not update the print values in the loop to print the specific axis of the velocity vector (y). 
