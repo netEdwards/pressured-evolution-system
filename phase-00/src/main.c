@@ -10,10 +10,11 @@ typedef struct {
 } vector2;
 
 typedef struct {
+    char* id;
     double mass;
     vector2 position;
     vector2 velocity;
-    vector2 forces[2];
+    vector2 acceleration;
     int physics_on;
 } object;
 
@@ -39,9 +40,9 @@ int main(void) {
     //create the object
 
     object balls[] = {
-        {20.00, {0,10}, 0.0},
-        {10.00, {0,20}, 0.0},
-        {11.00, {0,50}, 10.0}
+        {"ball_1", 20.00, {0,10}, {0.0, 0.0}},
+        {"ball_2", 10.00, {0,20}, {0.0, 0.0}},
+        {"ball_3", 11.00, {0,50}, {10.0, 10.0}}
     };
 
     int n_balls = sizeof(balls) / sizeof(balls[0]);
@@ -50,13 +51,16 @@ int main(void) {
 
     
 
-    double acceleration_g = -9.81;
+    vector2 acceleration_g = {0, -9.81};
     double dt = 0.1;
     double time = 0.0;
     double time_start = 0.0;
     double time_end = 10.0;
     object fastest_ball;
     int fastest_ball_set = 0;
+    vector2 force_g;
+    vector2 f_air_resistance = {12, -3};
+    vector2 net_force;
 
     while (time <= time_end){
         for (int i = 0; i < n_balls; i++)
@@ -67,13 +71,23 @@ int main(void) {
                 continue;
             };
 
-            printf("Ball: %d | t=%6.2f | y=%8.3f | v=%8.3f m/s\n", i+1, time, ball->position.y, ball->velocity.y);
+            printf("Ball: %s | t=%6.2f | x=%2.3f, y=%2.3f | v: (%2.3f ,%2.3f) m/s\n", ball->id, time, ball->position.x, ball->position.y, ball->velocity.x,  ball->velocity.y);
+            
+            force_g.x = ball->mass * acceleration_g.x;
+            force_g.y = ball->mass * acceleration_g.y;
 
-            double force_g = acceleration_g * ball->mass;
+            
 
-            double a = force_g / ball->mass;
+            net_force.x = force_g.x + f_air_resistance.x;
+            net_force.y = force_g.y + f_air_resistance.y;
 
-            ball->velocity.y += a * dt;
+            ball->acceleration.x = net_force.x / ball->mass;
+            ball->acceleration.y = net_force.y / ball->mass;            
+
+            ball->velocity.x += ball->acceleration.x * dt;
+            ball->velocity.y += ball->acceleration.y * dt;
+
+            ball->position.x += ball->velocity.x * dt;
             ball->position.y += ball->velocity.y * dt;
 
             if (ball->position.y <= 0){
@@ -89,7 +103,7 @@ int main(void) {
         time += dt;
     }
 
-    printf("All balls are on the ground, the first ball to have impact was: Ball with Mass = %8.2f \n", fastest_ball.mass);
+    
 
     
 }
