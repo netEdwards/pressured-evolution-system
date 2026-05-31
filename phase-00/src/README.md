@@ -12,7 +12,7 @@ Implementation 2:
 Can I evolve multiple objects through time?
 
 Implementation 3:
-Can objects have different initial conditions?
+--Can objects have different initial conditions?--
 
 Implementation 4:
 Can objects apply forces instead of hardcoded acceleration?
