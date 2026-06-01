@@ -94,3 +94,115 @@ A new realization I had was related to the actual definition and initialization 
 I have now made it so that all balls now feel more than one force, simultaneously I also made it to where the balls experience a force on more than just the y axis, updating the code to properly use vectors where it is appropriate (for vel, accl, force). With that, I changed the print statements to be a bit more readable and reveal all parts of the ball now that we have more data to review from the integration - allowing us to see both the x & y axis for velocity and position. Which reveals some cool behavior. 
 
 I was able to successfully dynamically integrate acceleration for this example, meaning object acceleration is no longer hardcoded and is now dependant on hardcoded force values or the hardcoded gravitational constant for being close to earths surface. This was fun! I enjoyed looking at how I could make sure the math was correct and also how to properly integrate everything together. Everything was right under the hood, but syntactically I had some issues here and there. After solving them I was able to see all the balls fall and be affected by a "wind" or "air resistance" force I added. 
+
+### Fifth Implementation — Object-to-Object Gravitational Interaction
+
+The goal of this implementation is to move from environment-driven motion into object-to-object interaction. Previously, each ball could be affected by global forces such as Earth gravity and a simplified air resistance / wind force. In this implementation, each ball also begins to gravitationally interact with the other balls in the simulation.
+
+This changes the simulation in a major way. State is no longer only affected by constants or external forces. State now depends on other state. A ball's acceleration depends on its own mass, its current position, and the position/mass of every other ball in the system.
+
+The general force pipeline now looks like this:
+
+```text
+Earth gravity
++ air resistance / wind
++ pairwise gravitational interaction
+= net force
+
+net force / mass
+= acceleration
+
+acceleration -> velocity -> position
+```
+
+The implementation now includes a `net_force` vector on each object. This allows the simulation to accumulate all forces acting on a ball during the timestep before converting that force into acceleration.
+
+#### What Was Accomplished
+
+I added a basic object-to-object gravity calculation using the Newtonian gravity structure:
+
+```text
+F = G * (m1 * m2) / r^2
+```
+
+Since the real gravitational constant is too small to produce visible behavior at this scale, I introduced a simplified simulation gravity constant called `SIM_G`. This is intentionally not physically accurate yet. The purpose is to make gravitational interaction visible and observable while developing the system.
+
+I also added a softening value, `epsilon`, to prevent the force from exploding when two objects get extremely close together. This is a simplified numerical solution that lets the bodies pass near each other without immediately creating unstable or unreadable behavior.
+
+For each ball, the simulation now calculates:
+
+```text
+dx = other_ball.x - current_ball.x
+dy = other_ball.y - current_ball.y
+
+distance_squared = dx² + dy²
+softened_distance_squared = distance_squared + epsilon²
+
+force_magnitude = SIM_G * (m1 * m2) / softened_distance_squared
+
+direction = distance_vector / distance
+
+force_vector = direction * force_magnitude
+```
+
+That force is then added to the current ball's `net_force`.
+
+This means the balls are no longer only falling toward Earth. They are also responding to each other's position and mass.
+
+#### Pressure Points Encountered
+
+This implementation introduced several new pressure points.
+
+The first major pressure point is readability. The `main()` function is now around 100+ lines and contains object initialization, simulation constants, force calculation, pairwise interaction logic, integration, and output. Even with descriptive variable names, backtracking through the logic is becoming difficult. The code still works as a low-level implementation, but the amount of physics and state-management logic inside `main()` is beginning to slow down debugging.
+
+The second major pressure point is observation. The terminal output is now almost unusable as the main observation method. Since each ball is being compared against every other ball, the output repeats several times per timestep. This creates a wall of text where it is technically possible to read the state, but practically difficult to understand what is happening in the simulation.
+
+The current output shows position and velocity changing over time, but it does not make the spatial behavior intuitive. The simulation has become visual/spatial, but the observation method is still purely textual/log-based. This mismatch is now a real limitation.
+
+The third pressure point is C syntax and explicitness. The simulation is now requiring more structs, vectors, object fields, and nested calculations. Small C details are becoming costly. For example, struct initialization uses braces around the whole struct and nested braces for nested structs, but scalar fields inside the struct do not each get their own braces. This seems simple after learning it, but while building the simulation, these syntax rules create friction and slow down debugging.
+
+This is not necessarily a failure. It is part of the PES goal. The implementation is exposing where the current language, structure, and observation method begin to resist the next layer of complexity.
+
+#### Current Problems / Known Issues
+
+The biggest current issue is that the simulation is hard to observe. The print output is too dense and repetitive to clearly understand the motion of the balls.
+
+The next issue is that the simulation logic may need to be separated into clearer phases:
+
+```text
+1. Clear / initialize each object's net force
+2. Apply environmental forces
+3. Apply object-to-object interaction forces
+4. Integrate acceleration, velocity, and position
+5. Observe / render the state
+```
+
+Right now, these ideas exist in the code, but they are still packed closely together. As a result, debugging requires mentally unpacking multiple responsibilities inside the same loop.
+
+Another important issue is update ordering. Ideally, all forces should be calculated from the same frozen timestep state before any object position is updated. If one object updates before another object's force calculation, later objects may be reading a newer state than earlier objects did. That can introduce bias into the simulation.
+
+#### New Realizations
+
+The biggest realization is that object interaction changes the nature of the simulation. This is no longer just "objects falling." This is now the beginning of an actual multi-body system.
+
+The second realization is that terminal logs are no longer enough. Once objects interact spatially, I need a better way to observe the system. This could start as a cleaner terminal table, but a simple terminal animation may become necessary soon.
+
+The third realization is that abstraction is becoming more justified. Earlier, abstraction felt optional. Now, the code itself is starting to create pressure for functions like:
+
+```text
+calculate_gravity_force_between_objects()
+apply_environment_forces()
+integrate_object()
+print_object_state()
+render_world()
+```
+
+These abstractions would not exist just to make the code look cleaner. They would exist because the current structure is becoming harder to reason about.
+
+#### Summary
+
+This implementation successfully began the transition from environment-driven motion to object-to-object gravitational interaction. The simulation now calculates pairwise gravitational forces between balls, uses softened gravity to avoid singularities, accumulates forces into `net_force`, and integrates object state from acceleration to velocity to position.
+
+However, this implementation also exposed major pressure points. Code readability is becoming harder inside a single `main()` function, terminal output is becoming nearly unusable as an observation method, and C's explicit struct/vector handling is slowing down development through small syntax and state-management issues.
+
+This is a meaningful PES step. The system is no longer simply growing in features; it is beginning to demand better structure and better observation tools.
