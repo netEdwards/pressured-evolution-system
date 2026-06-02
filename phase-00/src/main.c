@@ -23,6 +23,26 @@ typedef struct {
 float SIM_G = 0.1; // overly simplified for now. Real value would never show anything meaningful at this point.
 float epsilon = 0.01;
 
+void write_telemetry_header(FILE *file){
+    fprintf(file, "time,id,x,y,vx,vy,ax,ay,fx,fy\n");
+}
+
+void write_telemetry_row(FILE *file, double time, object *obj){
+    fprintf(
+        file,
+        "%.4f,%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+        time,
+        obj->id,
+        obj->position.x,
+        obj->position.y,
+        obj->velocity.x,
+        obj->velocity.y,
+        obj->acceleration.x,
+        obj->acceleration.y,
+        obj->net_force.x,
+        obj->net_force.y
+    );
+}
 
 void initialize_ball_physics(object* balls, int n_balls) {
     /*
@@ -52,8 +72,14 @@ int main(void) {
 
     int n_balls = sizeof(balls) / sizeof(balls[0]);
 
-    initialize_ball_physics(balls, n_balls);
+    FILE *telemetry = fopen("telemetry.csv", "w");
 
+    if (telemetry == NULL) {
+        printf("Error: could not open telemetry.csv for writing.\n");
+        return 1;
+    }
+
+    write_telemetry_header(telemetry);
     
 
     vector2 acceleration_g = {0, -9.81};
@@ -66,6 +92,8 @@ int main(void) {
     vector2 force_g;
     vector2 f_air_resistance = {12, -3};
     vector2 net_force;
+
+
 
     /*
     --Use state variables from prev or init iteration.
@@ -95,9 +123,6 @@ int main(void) {
             ball->net_force = net_force;
 
             for (int j = 0; j < n_balls; j++){
-
-
-                printf("Ball: %s | t=%6.2f | x=%2.3f, y=%2.3f | v: (%2.3f ,%2.3f) m/s\n", ball->id, time, ball->position.x, ball->position.y, ball->velocity.x,  ball->velocity.y);
 
                 object *compare_ball = &balls[j];
                 if (compare_ball->id == ball->id){
@@ -137,6 +162,15 @@ int main(void) {
             ball->position.x += ball->velocity.x * dt;
             ball->position.y += ball->velocity.y * dt;
 
+            //ground collision
+            if(ball->position.y < 0)
+            {
+                ball->position.y = 0;
+                ball->velocity.y = 0;
+            }
+
+            //add to telemetry file:
+            write_telemetry_row(telemetry, time, ball);
         }
         
         time += dt;

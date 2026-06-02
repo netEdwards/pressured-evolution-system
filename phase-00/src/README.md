@@ -206,3 +206,46 @@ This implementation successfully began the transition from environment-driven mo
 However, this implementation also exposed major pressure points. Code readability is becoming harder inside a single `main()` function, terminal output is becoming nearly unusable as an observation method, and C's explicit struct/vector handling is slowing down development through small syntax and state-management issues.
 
 This is a meaningful PES step. The system is no longer simply growing in features; it is beginning to demand better structure and better observation tools.
+
+
+### Implementation 5.5 Observability and Telemetry Layer
+
+A recurring issue while I work on this project is being able to analyze or even observe the simulation. While there are bigger plans for this solution in the future, I believe starting with typical outputs and thrid-party software to build analytical and observational objects. 
+
+This should be simple. We will just add a function to print the data into a csv data format and dump it into a file with `fprintf()`.
+
+
+
+#### Ground Collision Validation
+
+After implementing telemetry output, I opened the generated CSV data in LibreOffice Calc and began plotting object position against time. This immediately revealed behavior that was difficult to see through terminal output alone.
+
+For Ball A, the graph showed the object falling continuously past `y = 0` and reaching large negative values. While this was technically correct according to the simulation's current rules, it exposed a missing assumption in the world model. The simulation had gravity, force accumulation, acceleration, velocity, and position, but it had no concept of a ground or collision boundary.
+
+The graph made this obvious.
+
+This was the first time I experienced a direct benefit from telemetry and visualization. Rather than reading hundreds of lines of terminal output, I could immediately see the trajectory of an object over time and identify behavior that did not match the intended physical model.
+
+To address this, I added a simple ground constraint:
+
+```c
+if(ball->position.y < 0)
+{
+    ball->position.y = 0;
+    ball->velocity.y = 0;
+}
+```
+
+This effectively prevents objects from moving below the ground plane and forces them to stop once contact occurs.
+
+After rerunning the simulation and generating a new telemetry file, the updated graph showed Ball A reaching the ground and flattening at `y = 0` rather than continuing into negative space.
+
+An unexpected validation opportunity also appeared during this process. Earlier, I estimated that Ball A, which starts at a height of 10 meters with zero initial vertical velocity, should impact the ground at approximately 1.43 seconds according to classical kinematics.
+
+When I examined the telemetry graph after implementing collision handling, Ball A reached the ground at roughly 1.4–1.5 seconds.
+
+This was the first direct comparison between analytical physics and simulation output in the project. The result was not exact, but it was close enough to increase confidence that the integration process is behaving reasonably.
+
+More importantly, this implementation changed how I think about the simulation. Telemetry is no longer just a debugging tool. It has become an observation layer that allows me to validate assumptions, identify missing rules, and compare simulation behavior against theoretical predictions.
+
+This is the first implementation where I felt like I was analyzing a system rather than simply writing code.
