@@ -24,15 +24,16 @@ float SIM_G = 0.1; // overly simplified for now. Real value would never show any
 float epsilon = 0.01;
 
 void write_telemetry_header(FILE *file){
-    fprintf(file, "time,id,x,y,vx,vy,ax,ay,fx,fy\n");
+    fprintf(file, "time,id,mass,x,y,vx,vy,ax,ay,fx,fy\n");
 }
 
 void write_telemetry_row(FILE *file, double time, object *obj){
     fprintf(
         file,
-        "%.4f,%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
+        "%.4f,%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f\n",
         time,
         obj->id,
+        obj->mass,
         obj->position.x,
         obj->position.y,
         obj->velocity.x,
