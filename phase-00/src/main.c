@@ -65,8 +65,9 @@ int main(void) {
     //create the object
 
     object balls[] = {
-        {"A", 20.00, {1,10}, {0.0, 0.0}, {0,0}, {0,0}, 1},
-        {"B", 10.00, {2,20}, {0.0, 0.0}, {0,0}, {0,0}, 1},
+        //id,mass,position,velocity,acceleration,net_force,physics_on
+        {"A", 20.00, {1,10}, {20.0, 10.0}, {0,0}, {0,0}, 1},
+        {"B", 10.00, {2,20}, {15.0, 10.0}, {0,0}, {0,0}, 1},
         {"C", 11.00, {-1,50}, {10.0, 10.0}, {0,0}, {0,0}, 1}
     };
 
@@ -86,7 +87,7 @@ int main(void) {
     double dt = 0.1;
     double time = 0.0;
     double time_start = 0.0;
-    double time_end = 10.0;
+    double time_end = 5.0; // lowered from 10 to 5.
     object fastest_ball;
     int fastest_ball_set = 0;
     vector2 force_g;
