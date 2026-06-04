@@ -249,3 +249,21 @@ This was the first direct comparison between analytical physics and simulation o
 More importantly, this implementation changed how I think about the simulation. Telemetry is no longer just a debugging tool. It has become an observation layer that allows me to validate assumptions, identify missing rules, and compare simulation behavior against theoretical predictions.
 
 This is the first implementation where I felt like I was analyzing a system rather than simply writing code.
+
+# Stage 2 of Phase-00 and Implementation 6
+
+Here I want to pivot. Up to this point I have reduced the desire to abstract, expand, and do senseless scaling. I wanted to stay true to the foundational progression where I just follow needs. Now we move into a real pressure point where I will intentionally implement something to create a error or anomaly in the current integration method, hardship in readability, observability and more. Debugging will become harder as well. 
+
+All this is because now we have a foundation robust enough to set a bigger goal that includes multiple of the smaller implementations we have been doing. 
+
+**The Goal**: Implement simple orbital mechanics into the simulation where an object can stay in a stable orbit using Euler's integration methods. 
+
+Its a broader goal which is why we will pivot. The underlying idea is that Euler's integration method will probably not work and cause a collection of needs such as more telemetry, better debugging, and visibility and in the end more than likely some sort of integration evolution. Which may cause even bigger pressure or needs. 
+
+## First... Abstractions
+To make this easier on myself I will preplan some abstractions, one of them being vectors and vector maths. This is to shorten the main function and reduce the amount of manual "per-axis" operations I am writting which makes up like 30% of the main function.
+
+The other being telemetry but not at first. This will probably be after I...
+Abstract the physcis applications, which also take up a lot of space. 
+
+These abstractions will reinforce my knowledge of C and memory management but also clean up the code creating the first "architecture" in a way.
